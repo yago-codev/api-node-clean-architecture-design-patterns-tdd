@@ -189,3 +189,33 @@
     ==> testEnvironment: 'node' <==
     Está dizendo que o nosso ambiente de testes está 
     sendo executado no Node. 
+
+16) Separando as configs do Husky e do Lint Staged dentro dos seus respectivos arquivos:
+
+    Porque?
+    Para não sujarmos o arquivo package.json.
+
+    --> Criar arquivo .huskyrc.json
+
+    Tendo feito isso, 
+    basta extrair as configurações que haviam sido 
+    definidas pro Husky dentro do package.json:
+
+    { 
+      "hooks": {
+        "pre-commit": "lint-staged"
+      }
+    }
+
+    --> Criar arquivo .lintstagedrc.json:
+
+    Tendo feito isso, 
+    basta extrair as configurações que haviam sido 
+    definidas pro Lint Staged dentro do package.json:
+
+    {
+      "*.js": [
+        "standard --fix",
+        "git add"
+      ]
+    }

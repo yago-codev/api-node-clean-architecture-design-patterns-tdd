@@ -4,17 +4,6 @@
   "main": "index.js",
   "author": "yago-codev <yagomilano92@gmail.com>",
   "license": "MIT",
-  "lint-staged": {
-    "*.js": [
-      "standard --fix",
-      "git add"
-    ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "devDependencies": {
     "husky": "^4.2.3",
     "lint-staged": "^10.0.8",
