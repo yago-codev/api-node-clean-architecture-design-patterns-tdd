@@ -1,0 +1,9 @@
+01) Abreviando a flag "origin" na hora de fazer um push no git:
+
+    Porque?
+    Para reduzirmos a sintaxe, abrenviando "origin" para "o".
+
+    No terminal:
+    git remote rename origin o
+
+02) 
