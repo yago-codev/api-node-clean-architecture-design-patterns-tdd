@@ -6,4 +6,186 @@
     No terminal:
     git remote rename origin o
 
-02) 
+02) Criando primeiro commit:
+
+    Porque?
+    Iremos commitar tudo que fizermos, tudo MESMO.
+
+    Commit:
+    git add .
+    git commit -m "add package.json"
+    git push o master
+
+03) Instalando Linter:
+
+    Porque?
+    O Linter será usado para manter as boas práticas de escrita de código, 
+    fazendo com que nosso código se adeque a certos padrões.
+
+    O Linter aqui utilizado será o STANDARD.
+
+    O STANDARD é similar ao ESLint, 
+    com a diferença que o STANDARD usa por default o padrão STANDARD, 
+    não precisando usar ponto e vírgula no final das sentenças de código, 
+    não permite que deixemos vírgulas no final dos objetos/JSON's,
+    utiliza aspas simples ao invés de duplas...
+
+    Instalando:
+    yarn add standard -D
+
+04) É preciso instalar o StandardJS no VSCode para sinalizar os códigos que não estejam de acordo com o padrão STANDARD.
+    Além disso, é importante que as configs do VSCode sejam acessadas para 
+    habilitarmos a opção do Staged realizar o fix automático quando salvarmos os arquivos. 
+
+05) Utilizando o standard para procurar e mostrar os erros de escrita de código que fujam ao padrão:
+
+    No terminal:
+    npx standard
+
+    OBS: No terminal serão listados os arquivos e a localização exata onde os erros foram encontrados. 
+
+06) Instalando o Lint Staged:
+
+    Porque? 
+    Essa lib permite que scripts sejam rodados na nossa staged-area,
+    ou seja, os arquivos que estão incluídos no git add
+
+    Dessa forma conseguiremos fazer validações nos arquivos que 
+    vão entrar no commit que será feito. 
+
+    E o que será feito com o Lint Staged?
+    Através dele, 
+    poderemos previnir que commits "defeituosos" sejam feitos. 
+    Ou seja, commits que estão com o código mal formatado, 
+    com problemas de testes...
+
+    -> Comando para instalar o Lint Staged:
+       yarn add lint-staged -D
+
+07) Criando script no package.json para usar o Lint Staged:
+
+    {
+      "name": "api-node-clean-architecture-design-patterns-tdd",
+      "version": "1.0.0",
+      "main": "index.js",
+      "author": "yago-codev <yagomilano92@gmail.com>",
+      "license": "MIT",
+      "lint-staged": { <==
+        "*.js": ["standard"] // aplicando o standard em todos os arquivos js que estejam no stage do git <==
+      }, <==
+      "devDependencies": {
+        "lint-staged": "^10.0.8",
+        "standard": "^14.3.3"
+      }
+    }
+
+08) A partir de agora, quando adicionarmos arquivos no stage do git através do comando git add, poderemos rodar o comando:
+
+    yarn lint-staged 
+
+    O que o comando faz?
+    Ele acionará o Lint Staged, 
+    fazendo com que os arquivos em stage tenham o standard aplicado, 
+    mostrando os erros de sentença de código que não estiverem de acordo com o padrão STANDARD.
+
+09) Adicionando Husky para trabalhar em conjunto com o Lint Staged:
+
+    yarn add husky@next -D
+
+    OBS: A flag @next serve para pegarmos a última versão do pacote. 
+
+10) Criando script pro Husky:
+
+    Porque? 
+    Porque através dele adicionaremos Hooks no git. 
+
+    O que é um Hook?
+    Hook quando traduzido significa gancho,
+    ou seja, iremos utilizar um ganho no Git, 
+    esse Hook será uma ação que será executada no momento "pré commit", 
+    ou seja, antes que o commit ocorra, iremos executar algo. 
+    O que será executado quando o Hook for acionado?
+    Nós iremos chamar o script do Lint Staged para procurar os 
+    códigos que não tenham sido escritos de acordo com os padrões STANDARD.
+
+    {
+      "name": "api-node-clean-architecture-design-patterns-tdd",
+      "version": "1.0.0",
+      "main": "index.js",
+      "author": "yago-codev <yagomilano92@gmail.com>",
+      "license": "MIT",
+      "lint-staged": {
+        "*.js": [
+          "standard"
+        ]
+      },
+      "husky": { <==
+        "hooks": { <==
+          "pre-commit": "lint-staged" <==
+        } <==
+      }, <==
+      "devDependencies": {
+        "husky": "^4.2.3",
+        "lint-staged": "^10.0.8",
+        "standard": "^14.3.3"
+      }
+    }
+
+11) Fazendo com que o Standard tente corrigir sozinho os problemas de escrita de código:
+
+    Como?
+    Basta adicionar a flag "--fix", 
+    seguido pelo "git add".
+
+    Porque é preciso rodar o git add?
+    Porque quando o Standar conseguir resolver os problemas de escrita de código, 
+    o arquivo terá sido alterado, 
+    portando precisaremos readicionar-lo na stage area.
+
+    "lint-staged": {
+      "*.js": [
+        "standard --fix",
+        "git add"
+      ]
+    },
+
+12) Adicionando o Jest como ferramenta de Testes:
+
+    yarn add jest -D
+
+13) Iniciando o Jest para configurar-lo:
+
+    jest --init
+
+    Primeira pergunta: Yes
+    Segunda: node
+    Terceira: yes
+    Quarta: no
+
+    Tendo feito isso, 
+    um arquivo chamado 
+    jest.config.js
+    terá sido gerado. 
+
+14) Higienizando o arquivo gerado pelo Jest:
+
+    Vamos apagar todos os comentários!
+
+15) Entendendo o arquivo de config do Jest:
+
+    module.exports = {
+      coverageDirectory: 'coverage', 
+      testEnvironment: 'node'
+    }
+
+    O que faz? 
+    ==> coverageDirectory: 'coverage', <==
+    Vai criar a cobertura de testes,
+    pra saber quais arquivos foram cobertos pelos testes unitários ou não. 
+    A meta é sempre cobrirmos 100% dos arquivos, 
+    criando testes para cada funcionalidade que for implementada.
+
+    O que faz?
+    ==> testEnvironment: 'node' <==
+    Está dizendo que o nosso ambiente de testes está 
+    sendo executado no Node. 
