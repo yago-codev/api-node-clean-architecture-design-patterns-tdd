@@ -1,0 +1,267 @@
+01) Entendendo CLEAN ARCHITECTURE:
+
+    Supondo que temos uma rota básica para cadastrar um novo usuário
+    onde a mesma rota responsabiliza-se por 3 funcionalidades distintas:
+
+    receber os dados da requisição, 
+    validar os dados da requisição,
+    validar/enviar a repsonse.
+
+    No CLEAN ARCHITECTURE isso JAMAIS deve ser feito!!!!!
+
+    module.exports = () => {
+      router.post('/signup', new SignUpRouter().route)
+    }
+
+    class SigUpRouter {
+      async route(req, res) {
+        const { email, password, repeatPassword } = req.body
+        if (password === repeatPassword) {
+          const user = await AccountModel.create({ email, password })
+          return res.json(user)
+        }
+        res.status(400).json({ error: 'password must be equal to repeatPassword' })
+      }
+    }
+
+02) A responsabilidade de uma Rota deve ser:
+
+    - validar requests
+    - enviar responses
+
+    SOMENTE ISSO!!!!!
+
+03) Refatorando a rota criando casos de uso :
+
+    Quando estamos trabalhando com uma aplicação que 
+    utiliza CLEAN ARCHITECTURE, 
+    utilizamos os casos de uso para tratar exclusivamente das 
+    regras de negócio da aplicação. 
+
+    O que são regras de negócio?
+    Quando definimos que o usuário deve confirmar na hora em 
+    que estiver se registrando, estamos definindo uma regra de negócio. 
+
+    A seguir,
+    iremos refatorar a rota de signup...
+
+    Era assim:
+
+    module.exports = () => {
+      router.post('/signup', new SignUpRouter().route)
+    }
+
+    class SigUpRouter {
+      async route(req, res) {
+        const { email, password, repeatPassword } = req.body
+        if (password === repeatPassword) {
+          const user = await AccountModel.create({ email, password })
+          return res.json(user)
+        }
+        res.status(400).json({ error: 'password must be equal to repeatPassword' })
+      }
+    }
+
+    Ficou assim:
+
+    class SignUpRouter {
+      async route (req, res) {
+        const { email, password, repeatPassword } = req.body
+        new SignUpUseCase().signUp(email, password, repeatPassword) <==
+        res.status(400).json({ error: 'password must be equal to repeatPassword' })
+      }
+    }
+
+    class SignUpUseCase { <==
+      async signUp (email, password, repeatPassword) { <==
+        if (password === repeatPassword) { <==
+          const user = await AccountModel.create({ email, password }) <==
+          return user <==
+        } <==
+      } <==
+    } <==
+
+    O que foi feito?
+    Criamos uma classe para tratar somente do caso de uso que 
+    foi mencionado anteriormente. 
+    Ou seja, transferimos toda a regra de negócios para
+    uma classe específica.
+
+04) Refatorando novamente para esclarecer mais ainda a delegação de responsabilidades:
+
+    A seguir criaremos uma nova classe, 
+    que cuidará somente do banco de dados. 
+    Ou seja, ela vai apenas criar um novo usuário, 
+    nada a mais que isso. 
+    Nem mesmo a validação será inserida nessa classe, vejamos:
+
+    // signup-router
+    const express = require('express')
+    const router = express.Router()
+
+    class SignUpRouter {
+      async route (req, res) {
+        const { email, password, repeatPassword } = req.body
+        new SignUpUseCase().signUp(email, password, repeatPassword)
+        res.status(400).json({ error: 'password must be equal to repeatPassword' })
+      }
+    }
+
+    // signup-usecase
+    class SignUpUseCase {
+      async signUp (email, password, repeatPassword) {
+        if (password === repeatPassword) {
+          new AddAccountRepository().add(email, password)
+        }
+      }
+    }
+
+    // add-account-repo
+    const mongoose = require('mongoose')
+    const AccountModel = mongoose.model('Account')
+
+    class AddAccountRepository {
+      async add (email, password) {
+        const user = await AccountModel.create({ email, password })
+        return user
+      }
+    }
+
+05) Refatorando a classe da rota para tornar-la independente,
+    desaclopando-a do Express:
+
+    Porque?
+    Porque caso queiramos substituir o Express por outro framework, 
+    poderemos fazer isso com o menor impacto possível dentro da aplicação.
+
+    A partir de agora não utilizaremos mais o Express para devolver o req e o res, 
+    pois iremos criar uma nova classe para cuidarmos das requests e das reponses.
+    Essa classe terá um objeto JSON, que irá conter uma propriedade "body", 
+    que irá ter o email, password repeatPassword.
+    Ou seja, criaremos um custom http request. 
+
+    Do mesmo modo, 
+    teremos um http response personalizado, 
+    onde dentro desse JSON retornaremos as props de 
+    status code e um body para devolver o usuário que foi criado:
+
+    module.exports = () => {
+      router.post('/signup', new SignUpRouter().route)
+    }
+
+    // signup-router
+    class SignUpRouter {
+      async route (httpRequest) {
+        const { email, password, repeatPassword } = httpRequest.body
+        const user = new SignUpUseCase().signUp(email, password, repeatPassword)
+        return {
+          statusCode: 200,
+          body: user
+        }
+      }
+    }
+
+    // signup-usecase
+    class SignUpUseCase {
+      async signUp (email, password, repeatPassword) {
+        if (password === repeatPassword) {
+          new AddAccountRepository().add(email, password)
+        }
+      }
+    }
+
+    // add-account-repo
+    const mongoose = require('mongoose')
+    const AccountModel = mongoose.model('Account')
+
+    class AddAccountRepository {
+      async add (email, password) {
+        const user = await AccountModel.create({ email, password })
+        return user
+      }
+    }
+
+06) Criando classe para receber o httpRequest e enviar o httpResponse personalizados:
+
+    Ao criarmos essa classe, 
+    ela irá ter um método estático que irá apenas adaptar 
+    uma classe a outra. 
+
+    Como isso vai ser feito?
+    No método estático de adaptação,
+    iremos receber um parâmetro chamado router, 
+    esse parâmetro será uma instância da classe SignUpRouter, 
+    que é a classe que irá as personalizações do httpRequest e httpResponse.
+
+    A única responsabilidade do método adapter será a de retornar uma função que
+    será assíncrona e que irá acessar o objeto router para 
+    utilizarmos seu método route, 
+    que é o método onde personalizaremos o httpRequest e o httpResponse:
+
+    const express = require('express')
+    const router = express.Router()
+
+    module.exports = () => {
+    const router = new SignUpRouter()
+      router.post('/signup', ExpressRouterAdapter().adapt(router))
+    }
+
+    // classe que utiliza o pattern Adapter
+    class ExpressRouterAdapter {
+      static adapt (router) {
+        return async (req, res) => {
+          const httpRequest = {
+            body: req.body
+          }
+          const httpResponse = await router.route(httpRequest)
+          res.status(httpResponse.statusCode).json(httpResponse.body)
+        }
+      }
+    }
+
+    // signup-router - recebe os dados da req e envia os dados da response em forma de JSON
+    class SignUpRouter {
+      async route (httpRequest) {
+        const { email, password, repeatPassword } = httpRequest.body
+        const user = new SignUpUseCase().signUp(email, password, repeatPassword)
+        return {
+          statusCode: 200,
+          body: user
+        }
+      }
+    }
+
+    // signup-usecase - regra de negócios
+    class SignUpUseCase {
+      async signUp (email, password, repeatPassword) {
+        if (password === repeatPassword) {
+          new AddAccountRepository().add(email, password)
+        }
+      }
+    }
+
+    // add-account-repo - cria e retorna o usuário inserido no banco de dados
+    const mongoose = require('mongoose')
+    const AccountModel = mongoose.model('Account')
+
+    class AddAccountRepository {
+      async add (email, password) {
+        const user = await AccountModel.create({ email, password })
+        return user
+      }
+    }
+
+    Ou seja, 
+    através do pattern adapter nós criamos uma classe 
+    que executa um método de adaptação, 
+    adaptando o req e o res ao httpRequest e httpResponse persnalizados que criamos.    
+
+
+07) Agora que temos nossas responsabilidades delegadas em classes que 
+    responsabilizam-se apenas por uma coisa, 
+    estamos conhecendo outro conceito da CLEAN ARCHITECTURE, 
+    que é respeitar a primeira regrinha do Solid, 
+    que é o "single responsability".
+
+    Ou seja, 
+    cada componente possui apenas uma responsabilidade. 

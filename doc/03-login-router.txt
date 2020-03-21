@@ -1,0 +1,149 @@
+01) A seguir criaremos o primeiro teste unitário da API. 
+
+    Para organizarmos tudo corretamente seguindo os conceitos da CLEAN ARCHITECTURE, 
+    iremos criar a seguinte estrutura de pastas:
+
+    src/presentation/routers/login-router.spec.js
+
+    Porque spec.js ao invés de test.js?
+    O Jest reconhece tanto as extensões .spec quanto .test
+
+
+02) Dentro do package.json precisaremos criar uma nova prop para 
+    configurarmos o STANDARD com o Jest. 
+
+    Precisaremos incluir o Jest dentro das variáveis de ambiente do STANDARD:
+
+    {
+      "name": "api-node-clean-architecture-design-patterns-tdd",
+      "version": "1.0.0",
+      "main": "index.js",
+      "author": "yago-codev <yagomilano92@gmail.com>",
+      "license": "MIT",
+      "standard": { <==
+        "env": ["jest"] <==
+      }, <==
+      "devDependencies": {
+        "husky": "^4.2.3",
+        "lint-staged": "^10.0.8",
+        "standard": "^14.3.3"
+      },
+      "scripts": {
+        "test": "jest"
+      }
+    }
+
+    Pronto, 
+    o Jest já foi incluído nas variáveis de ambiente do STANDARD!!!
+
+03) Agora vamos criar o nosso teste no arquivo login-router.spec.js:
+
+    Nesse primeiro teste iremos validar o email e o password enviados no req.body:
+
+    describe('Login Router', () => {
+      // deve retornar um status code 400 se o email não for fornecido
+      test('Should return 400 if no email is provided', () => {
+        ...
+      })
+    })
+
+04) Quem será testado?
+    Aqui nós testaremos o login router, 
+    que será uma instância da classe LoginRouter. 
+
+    Essa classe ainda não existe, obviamente, 
+    e é exatamente assim que conduziremos nossos testes:
+    primeiro criamos o teste, para depois implementarmos o código!
+
+    Sempre quando formos testar um novo objeto, função, 
+    iremos nomear-la como "sut".
+
+    Porque "sut"?
+    "sut" é um padrão de nomenclatura que signifiac System Under Test. 
+
+    Desse modo saberemos rapidamente quem está sendo testado, 
+    supondo que no mesmo teste tenhamos instanciado 5 ou mais classes distintas. 
+
+    describe('Login Router', () => {
+      // deve retornar um status code 400 se o email não for fornecido
+      test('Should return 400 if no email is provided', () => {
+        const sut = new loginRouter() <==
+      })
+    })
+
+05) O que será testado dentro da classe?
+
+    Ou seja, 
+    qual é a funcionalidade/método da classe instanciada que 
+    estará sendo testado?
+
+    Aqui nós testaremos o método route().
+    Esse método route() irá receber um httpRequest personalizado como parâmetro. 
+
+    Esse httpRequest será um objeto:
+
+    describe('Login Router', () => {
+      // deve retornar um status code 400 se o email não for fornecido
+      test('Should return 400 if no email is provided', () => {
+        const sut = new loginRouter(httpRequest)
+        const httpRequest = { <==
+          ... <==
+        } <==
+      })
+    })
+
+    ...
+
+    Dentro do próprio método route() nós iremos ter nossa httpResponse, 
+    portanto iremos atribuir-lo a a uma constante chamada httpResponse :
+
+    describe('Login Router', () => {
+      // deve retornar um status code 400 se o email não for fornecido
+      test('Should return 400 if no email is provided', () => {
+        const sut = new LoginRouter()
+        const httpRequest = {
+
+        }
+        const httpResponse = sut.route(httpRequest) <==
+      })
+    })
+
+06) O que será esperado a partir desse teste?
+
+    Nós esperamos que o statusCode (prop do httpResponse personalizado) seja igual a 400:
+
+    describe('Login Router', () => {
+      // deve retornar um status code 400 se o email não for fornecido
+      test('Should return 400 if no email is provided', () => {
+        const sut = new LoginRouter()
+        const httpRequest = {
+
+        }
+        const httpResponse = sut.route(httpRequest)
+        expect(httpResponse.statusCode).toBe(400)
+      })
+    })
+
+07) Dentro do objeto httpRequest iremos inserir as props personalizadas para devolver a response:
+
+    OBS: Nesse objeto iremos inserir apenas a senha, 
+    já que o objetivo do teste é retornar um erro 400 quando o email não for informado. 
+
+    describe('Login Router', () => {
+      // deve retornar um status code 400 se o email não for fornecido
+      test('Should return 400 if no email is provided', () => {
+        const sut = new LoginRouter()
+        const httpRequest = { <==
+          body: { <==
+            password: 'any_password' <==
+          } <==
+        } <==
+        const httpResponse = sut.route(httpRequest)
+        expect(httpResponse.statusCode).toBe(400)
+      })
+    })
+
+08) Dentro do mesmo arquivo de testes, somente por enquanto, 
+    iremos criar a classe do teste, ou seja, a classe LoginRouter:
+
+    
