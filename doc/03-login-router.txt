@@ -146,4 +146,127 @@
 08) Dentro do mesmo arquivo de testes, somente por enquanto, 
     iremos criar a classe do teste, ou seja, a classe LoginRouter:
 
-    
+    class LoginRouter { <==
+      route (httpRequest) { <==
+        if (!httpRequest.body.email) { <==
+          return { <==
+            statusCode: 400 <==
+          } <==
+        } <==
+      } <==
+    } <==
+
+    describe('Login Router', () => {
+      // deve retornar um status code 400 se o email não for fornecido
+      test('Should return 400 if no email is provided', () => {
+        const sut = new LoginRouter()
+        const httpRequest = {
+          body: { password: 'any_password' }
+        }
+        const httpResponse = sut.route(httpRequest)
+        expect(httpResponse.statusCode).toBe(400)
+      })
+    })
+
+    OBS: Pronto, isso já é o suficiente pra fazer o primeiro teste passar!
+
+09) Criando o script de testes no package.json :
+
+    {
+      "name": "api-node-clean-architecture-design-patterns-tdd",
+      "version": "1.0.0",
+      "main": "index.js",
+      "author": "yago-codev <yagomilano92@gmail.com>",
+      "license": "MIT",
+      "scripts": {
+        "test": "jest",
+        "test:staged": "jest" <==
+      },
+      "standard": {
+        "env": ["jest"]
+      },
+      "devDependencies": {
+        "husky": "^4.2.3",
+        "lint-staged": "^10.0.8",
+        "standard": "^14.3.3"
+      }
+    }
+
+10) Inserindo os testes dentro do arquivo de config do lint-staged para que 
+    eles também sejam filtrados quando entrarem pro stage :
+
+    {
+      "*.js": [
+        "standard --fix",
+        "yarn test:staged", <==
+        "git add"
+      ]
+    }
+
+    Porque fizemos isso?
+    Quando formos commitar os testes, 
+    automaticamente o lint-staged será acionado, 
+    fazendo uma varredura nos arquivos de testes para 
+    verificar se existe algum erro de sintaxe de código.
+    Caso o erro exista, o commit dos testes serão bloqueados. 
+
+11) Escrevendo o teste de verificação de senha:
+
+    Qual será o objetivo do teste?
+    Retornaremos um erro 400 caso a senha não tenha sido informada:
+
+    describe('Login Router', () => {
+      // deve retornar um status code 400 se o password não for fornecido
+      test('Should return 400 if no password is provided', () => {
+        const sut = new LoginRouter()
+        const httpRequest = {
+          body: { email: 'any_email@mail.com' }
+        }
+        const httpResponse = sut.route(httpRequest)
+        expect(httpResponse.statusCode).toBe(400)
+      })
+    })
+
+12) Criando scritp de testes para adicionarmos o Jest:
+
+    OBS: Esse script é somente "test", e não "test:staged"
+
+    Quando adicionamos a flat "--watchAll" dentro 
+    do script de testes, o Jest automaticamente passará a monitorar nossos testes 
+    conforme as alterações forem sido feitas no código, 
+    portanto não precisaremos ficar executando o script toda vez que quisermos acionar o Jest. 
+
+    {
+      "name": "api-node-clean-architecture-design-patterns-tdd",
+      "version": "1.0.0",
+      "main": "index.js",
+      "author": "yago-codev <yagomilano92@gmail.com>",
+      "license": "MIT",
+      "scripts": {
+        "test": "jest --watchAll", <==
+        "test:staged": "jest"
+      },
+      "standard": {
+        "env": ["jest"]
+      },
+      "devDependencies": {
+        "husky": "^4.2.3",
+        "lint-staged": "^10.0.8",
+        "standard": "^14.3.3"
+      }
+    }
+
+12) Adaptando a classe LoginRouter, 
+    criando a validação para sabermos se o password NAO foi informado.
+
+    class LoginRouter {
+      route (httpRequest) {
+        if (!httpRequest.body.email || !httpRequest.body.password) { <==
+          return {
+            statusCode: 400
+          }
+        }
+      }
+    }
+
+    Pronto, isso é o suficiente pra fazer o teste passar!!!!!
